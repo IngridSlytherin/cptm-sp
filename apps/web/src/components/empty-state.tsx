@@ -1,0 +1,1 @@
+export function EmptyState({title,description}:{title:string;description:string}){return <div className="empty-state"><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm0 2v8h4l2 2h4l2-2h4V6H4Zm0 10v2h16v-2h-3.2l-2 2H9.2l-2-2H4Z"/></svg></span><h2>{title}</h2><p>{description}</p></div>}

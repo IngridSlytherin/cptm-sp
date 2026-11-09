@@ -1,0 +1,4 @@
+import { ConfigService } from '@nestjs/config';
+import { OperationalStatus } from '@prisma/client';
+import { MockStatusProvider } from '../src/modules/status-providers/providers/mock-status.provider';
+describe('MockStatusProvider',()=>{it('converte cenário de incidente para códigos internos e estados tipados',async()=>{const config={get:()=> 'incident'} as unknown as ConfigService;const result=await new MockStatusProvider(config).fetchStatuses();expect(result).toEqual(expect.arrayContaining([expect.objectContaining({lineCode:'line-8-diamond',status:OperationalStatus.REDUCED_SPEED}),expect.objectContaining({lineCode:'line-12-sapphire',status:OperationalStatus.INTERRUPTED})]));});it('simula fonte indisponível',async()=>{const config={get:()=> 'source-error'} as unknown as ConfigService;await expect(new MockStatusProvider(config).fetchStatuses()).rejects.toThrow('Fonte mock indisponível');});});

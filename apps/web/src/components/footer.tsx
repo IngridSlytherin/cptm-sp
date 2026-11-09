@@ -1,0 +1,1 @@
+export function Footer(){return <footer className="site-footer"><div className="footer-inner"><div><strong>Situação dos Trilhos</strong><p>Monitoramento independente da rede metropolitana de São Paulo.</p></div><p className="disclaimer">Este é um serviço independente. As informações são obtidas de fontes públicas e podem sofrer atrasos.</p></div></footer>}

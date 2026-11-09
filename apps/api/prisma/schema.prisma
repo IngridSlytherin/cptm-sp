@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OperationalStatus {
+  NORMAL
+  REDUCED_SPEED
+  PARTIAL_OPERATION
+  INTERRUPTED
+  CLOSED
+  PLANNED_MAINTENANCE
+  UNKNOWN
+}
+
+model RailwayLine {
+  id                 String            @id @default(cuid())
+  code               String            @unique
+  number             String
+  name               String
+  operator           String
+  color              String?
+  active             Boolean           @default(true)
+  currentStatus      OperationalStatus @default(UNKNOWN)
+  currentDescription String?
+  currentSource      String?
+  currentSourceEventId String?
+  sourceUpdatedAt    DateTime?
+  lastCollectedAt    DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  events             StatusEvent[]
+}
+
+model StatusEvent {
+  id              String            @id @default(cuid())
+  lineId          String
+  status          OperationalStatus
+  description     String?
+  source          String
+  sourceEventId   String?
+  sourceUpdatedAt DateTime?
+  collectedAt     DateTime          @default(now())
+  startedAt       DateTime?
+  endedAt         DateTime?
+  line            RailwayLine       @relation(fields: [lineId], references: [id], onDelete: Cascade)
+
+  @@index([lineId, collectedAt])
+  @@index([lineId, status])
+  @@index([sourceEventId])
+}

@@ -1,0 +1,3 @@
+import Link from 'next/link';
+
+export function Header(){return <header className="site-header"><div className="header-inner"><Link className="brand" href="/" aria-label="Situação dos Trilhos — página inicial"><span className="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h10a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3l2 3h-2.4l-2-3H9.4l-2 3H5l2-3a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3Zm0 3v5h10V6H7Zm1 9a1.25 1.25 0 1 0 0-2.5A1.25 1.25 0 0 0 8 15Zm8 0a1.25 1.25 0 1 0 0-2.5A1.25 1.25 0 0 0 16 15Z"/></svg></span><span><strong>Situação dos Trilhos</strong><small>São Paulo</small></span></Link><nav aria-label="Navegação principal"><Link href="/">Visão geral</Link><Link href="/health">Saúde do sistema</Link></nav></div></header>}

@@ -1,0 +1,10 @@
+{
+  "name": "@rail-status/shared",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "src/index.ts",
+  "exports": {".": {"types": "./src/index.ts", "default": "./dist/index.js"}},
+  "scripts": {"build": "tsc -p tsconfig.json", "lint": "eslint src --max-warnings=0", "test": "vitest run --passWithNoTests"},
+  "devDependencies": {"@eslint/js": "^9.0.0", "eslint": "^9.0.0", "typescript": "^5.0.0", "typescript-eslint": "^8.0.0", "vitest": "^3.0.0"}
+}

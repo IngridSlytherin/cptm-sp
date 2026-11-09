@@ -1,0 +1,6 @@
+import { render,screen } from '@testing-library/react';
+import { describe,expect,it } from 'vitest';
+import { LineCard } from '../src/components/line-card';
+import type { LineStatus,OperationalStatus } from '../src/types/status';
+const line=(status:OperationalStatus,freshness:LineStatus['freshness']='fresh'):LineStatus=>({code:'line-1-blue',number:'1',name:'Azul',operator:'Metrô de São Paulo',color:'#005CA9',status,statusLabel:{NORMAL:'Operação normal',INTERRUPTED:'Operação interrompida',UNKNOWN:'Situação não confirmada'}[status]??status,description:null,source:'mock',sourceUpdatedAt:null,lastCollectedAt:new Date().toISOString(),freshness});
+describe('LineCard',()=>{it('renderiza status normal',()=>{render(<LineCard line={line('NORMAL')}/>);expect(screen.getByText('Operação normal')).toBeInTheDocument();});it('renderiza status crítico',()=>{render(<LineCard line={line('INTERRUPTED')}/>);expect(screen.getByText('Operação interrompida')).toBeInTheDocument();});it('não apresenta UNKNOWN como normal',()=>{render(<LineCard line={line('UNKNOWN')}/>);expect(screen.getByText('Situação não confirmada')).toBeInTheDocument();expect(screen.queryByText('Operação normal')).not.toBeInTheDocument();});it('avisa sobre dado desatualizado',()=>{render(<LineCard line={line('NORMAL','stale')}/>);expect(screen.getByText(/Informação desatualizada/)).toBeInTheDocument();});});

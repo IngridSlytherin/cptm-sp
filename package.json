@@ -1,0 +1,22 @@
+{
+  "name": "sp-rail-status",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["apps/web", "apps/api", "packages/shared"],
+  "scripts": {
+    "dev": "concurrently -n web,api -c cyan,green \"npm run dev:web\" \"npm run dev:api\"",
+    "dev:web": "npm run dev --workspace=@rail-status/web",
+    "dev:api": "npm run start:dev --workspace=@rail-status/api",
+    "build": "npm run build --workspace=@rail-status/shared && npm run build --workspace=@rail-status/api && npm run build --workspace=@rail-status/web",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "prisma:generate": "npm run prisma:generate --workspace=@rail-status/api",
+    "prisma:migrate": "npm run prisma:migrate --workspace=@rail-status/api",
+    "prisma:studio": "npm run prisma:studio --workspace=@rail-status/api"
+  },
+  "devDependencies": {"concurrently": "^9.2.0"},
+  "engines": {"node": ">=22.0.0", "npm": ">=10.0.0"}
+}

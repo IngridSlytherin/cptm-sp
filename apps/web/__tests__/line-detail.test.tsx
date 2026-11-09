@@ -1,0 +1,5 @@
+import { render,screen } from '@testing-library/react';
+import { describe,expect,it,vi } from 'vitest';
+vi.mock('../src/services/lines',()=>({getLine:vi.fn().mockResolvedValue({code:'line-1-blue',number:'1',name:'Azul',operator:'Metrô de São Paulo',color:'#005CA9',status:'NORMAL',statusLabel:'Operação normal',description:'Circulação normal',source:'mock',sourceUpdatedAt:null,lastCollectedAt:new Date().toISOString(),freshness:'fresh',events:[{id:'event-1',status:'NORMAL',description:'Circulação normal',source:'mock',collectedAt:new Date().toISOString(),startedAt:new Date().toISOString(),endedAt:null}]})}));
+import LinePage from '../app/linhas/[code]/page';
+describe('LinePage',()=>{it('renderiza detalhes e histórico',async()=>{render(await LinePage({params:Promise.resolve({code:'line-1-blue'})}));expect(screen.getByRole('heading',{name:'Azul'})).toBeInTheDocument();expect(screen.getByRole('heading',{name:'Histórico recente'})).toBeInTheDocument();expect(screen.getAllByText('Circulação normal').length).toBeGreaterThan(0);});});

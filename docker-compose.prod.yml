@@ -1,0 +1,44 @@
+name: rail-status-prod
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment: {POSTGRES_DB: "${POSTGRES_DB}", POSTGRES_USER: "${POSTGRES_USER}", POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"], interval: 10s, timeout: 5s, retries: 10}
+    networks: [rail_internal]
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["sh", "-c", "exec redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\""]
+    environment: {REDIS_PASSWORD: "${REDIS_PASSWORD}"}
+    volumes: [redis_data:/data]
+    healthcheck: {test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep PONG"], interval: 10s, timeout: 5s, retries: 10}
+    networks: [rail_internal]
+  api:
+    build: {context: ., dockerfile: infrastructure/docker/api.Dockerfile}
+    restart: unless-stopped
+    environment: {NODE_ENV: production, API_PORT: 3001, CORS_ORIGIN: "${CORS_ORIGIN}", DATABASE_URL: "${DATABASE_URL}", REDIS_URL: "${REDIS_URL}", RATE_LIMIT_TTL: "${RATE_LIMIT_TTL:-60000}", RATE_LIMIT_LIMIT: "${RATE_LIMIT_LIMIT:-100}", STATUS_PROVIDER: "${STATUS_PROVIDER:-mock}", STATUS_SOURCE_URL: "${STATUS_SOURCE_URL:-}", STATUS_SOURCE_API_KEY: "${STATUS_SOURCE_API_KEY:-}", STATUS_COLLECTION_INTERVAL_SECONDS: "${STATUS_COLLECTION_INTERVAL_SECONDS:-300}", STATUS_STALE_AFTER_SECONDS: "${STATUS_STALE_AFTER_SECONDS:-180}", STATUS_REQUEST_TIMEOUT_MS: "${STATUS_REQUEST_TIMEOUT_MS:-10000}", MOCK_STATUS_SCENARIO: "${MOCK_STATUS_SCENARIO:-normal}", INTERNAL_COLLECTION_KEY: "${INTERNAL_COLLECTION_KEY:-}"}
+    depends_on: {postgres: {condition: service_healthy}, redis: {condition: service_healthy}}
+    healthcheck: {test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3001/api/v1/health"], interval: 15s, timeout: 5s, retries: 10, start_period: 10s}
+    networks: [rail_internal]
+  web:
+    build: {context: ., dockerfile: infrastructure/docker/web.Dockerfile, args: {NEXT_PUBLIC_API_URL: "/api/v1", DOMAIN: "${DOMAIN}"}}
+    restart: unless-stopped
+    environment: {NEXT_PUBLIC_API_URL: "/api/v1", API_INTERNAL_URL: "http://api:3001/api/v1", DOMAIN: "${DOMAIN}"}
+    depends_on: {api: {condition: service_healthy}}
+    healthcheck: {test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/"], interval: 15s, timeout: 5s, retries: 10}
+    networks: [rail_internal]
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./infrastructure/nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./infrastructure/nginx/certbot/conf:/etc/letsencrypt:ro
+      - ./infrastructure/nginx/certbot/www:/var/www/certbot:ro
+    depends_on: {web: {condition: service_healthy}, api: {condition: service_healthy}}
+    healthcheck: {test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/nginx-health"], interval: 15s, timeout: 5s, retries: 5}
+    networks: [rail_internal]
+volumes: {postgres_data: {}, redis_data: {}}
+networks: {rail_internal: {driver: bridge, internal: false}}

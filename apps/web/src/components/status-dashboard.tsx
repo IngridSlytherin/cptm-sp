@@ -1,0 +1,17 @@
+'use client';
+import { useEffect, useState } from 'react';
+import { getLinesStatus } from '../services/lines';
+import type { LinesStatusResponse } from '../types/status';
+import { AlertBanner } from './alert-banner';
+import { EmptyState } from './empty-state';
+import { LastUpdate } from './last-update';
+import { StatusCard } from './status-card';
+export function StatusDashboard({initialData,initialError=false}:{initialData:LinesStatusResponse|null;initialError?:boolean}){const[data,setData]=useState(initialData);const[loading,setLoading]=useState(false);const[error,setError]=useState(initialError);
+  useEffect(()=>{if(!initialError||initialData)return;let active=true;let timer:ReturnType<typeof setTimeout>|undefined;setError(false);setLoading(true);async function recover(attempt:number){try{const nextData=await getLinesStatus({cache:'no-store'});if(active){setData(nextData);setError(false);setLoading(false)}}catch{if(!active)return;if(attempt<3){timer=setTimeout(()=>void recover(attempt+1),attempt*1000)}else{setError(true);setLoading(false)}}}timer=setTimeout(()=>void recover(1),400);return()=>{active=false;if(timer)clearTimeout(timer)}},[initialData,initialError]);
+  async function refresh(){setLoading(true);setError(false);try{setData(await getLinesStatus({cache:'no-store'}));}catch{setError(true);}finally{setLoading(false)}}
+  const normal=data?.data.filter(line=>line.status==='NORMAL').length??0;const unknown=data?.data.filter(line=>line.status==='UNKNOWN').length??0;const problems=(data?.data.length??0)-normal-unknown;
+  return <div className="dashboard"><section className="toolbar" aria-label="Atualização"><LastUpdate value={data?.meta.lastSuccessfulCollection??null}/><button className="refresh-button" type="button" onClick={()=>void refresh()} disabled={loading}><svg className={loading?'is-spinning':''} viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 6.7l-1.4-1.4A6 6 0 1 1 18 11h-3l4 4 4-4h-3Z"/></svg>{loading?'Atualizando…':'Atualizar dados'}</button></section>
+  {(error||data?.meta.sourceState==='error')&&<AlertBanner title="Fonte de dados está indisponível" tone="error">Os últimos dados conhecidos continuam visíveis quando disponíveis. Tente novamente em alguns instantes.</AlertBanner>}
+  {data&&<section className="summary" aria-label="Resumo operacional"><div className="summary-card summary-success"><span className="summary-icon" aria-hidden="true">✓</span><span><strong>{normal}</strong><small>Operação normal</small></span></div><div className="summary-card summary-warning"><span className="summary-icon" aria-hidden="true">!</span><span><strong>{problems}</strong><small>Precisam de atenção</small></span></div><div className="summary-card summary-neutral"><span className="summary-icon" aria-hidden="true">?</span><span><strong>{unknown}</strong><small>Sem confirmação</small></span></div></section>}
+  {!data&&error&&<EmptyState title="Não foi possível carregar os dados" description="A API interna não respondeu. Verifique os serviços e tente atualizar novamente."/>}{data?.data.length===0&&<EmptyState title="Nenhuma linha disponível" description="Não há linhas ativas para exibir neste momento."/>}
+  {data&&data.data.length>0&&<><div className="section-heading"><div><p className="eyebrow">Rede metropolitana</p><h2>Situação por linha</h2></div><span>{data.data.length} linhas monitoradas</span></div><section className="line-grid" aria-label="Situação das linhas">{data.data.map(line=><StatusCard key={line.code} line={line}/>)}</section></>}</div>}
